@@ -1,0 +1,54 @@
+Name            : ipmiwatchdogd
+Version         : 1.0
+Release		: 0
+Group           : System Environment/Base
+
+Summary         : The configuration file for ipmiwatchdogd daemon 
+
+License         : GPL
+Vendor		: Sam.Lee@emerson.com
+
+Buildroot       : %{_tmppath}/%{name}-%{version}
+Source          : %{name}-%{version}.tar.gz
+
+%description
+This daemon can be used to control the IPMC watchdog without the /dev/watchdog device; just IPMI driver(ipmi_msghandler, ipmi_si and ipmi_devintf) and BMC hardware required. The daemon based on raw ipmi command, get device id, set watchdog command, reset watchdog command and get watchdog command. Wrote by Sam Lee  at Mar 2013; if you have any question/comments please contact Sam Lee at Sam.Lee@emerson.com 
+
+%prep
+
+%setup -q
+
+%build %configure_target
+#./configure --prefix=%{_prefix} --build=i686-pc-linux-gnu --host=powerpc-wrs-linux-gnu --target=me500
+#./configure --prefix=%{_prefix} CC=powerpc-wrs-linux-gnu-gcc CFLAGS="$CFLAGS --sysroot=/home/compile/dedicated-ppc/export/sysroot/fsl_8548cds-glibc_std/sysroot/te500v2/usr/lib/"
+
+#./configure --prefix=%{_prefix} CC=powerpc-wrs-linux-gnu-gcc CFLAGS="-B /home/compile/dedicated-ppc/export/sysroot/fsl_8548cds-glibc_std/sysroot/te500v2/usr/lib/crt1.o"
+
+CFLAGS="$CFLAGS -L/home/compile/dedicated-ppc/export/sysroot/" ./configure --with-kerneldir --with-rpm-distro= --prefix=%{_prefix} --bindir=%{_bindir} --sbindir=%{_sbindir} --datadir=%{_datadir} --includedir=%{_includedir} --libdir=%{_libdir} --mandir=%{_mandir} --sysconfdir=%{_sysconfdir} --build=i686-pc-linux-gnu --host=powerpc-wrs-linux-gnu --target=me500
+
+make CC_FOR_BUILD="%{_host_cc_wrapper}" CFLAGS_FOR_BUILD="%{_host_cflags}" CFLAGS="${CFLAGS}"
+
+
+#make 
+
+%install %configure_target
+rm -rf $RPM_BUILD_ROOT
+make DESTDIR=$RPM_BUILD_ROOT install
+
+install -D -m 755 /home/compile/p2020/build/ipmiwatchdogd-1.0/BUILD/ipmiwatchdogd-1.0/S99zIPMIWATCHDOGD $RPM_BUILD_ROOT%{_sysconfdir}/init.d/S99zIPMIWATCHDOGD
+install -D -m 644 /home/compile/p2020/build/ipmiwatchdogd-1.0/BUILD/ipmiwatchdogd-1.0/ipmiwatchdog.conf $RPM_BUILD_ROOT%{_sysconfdir}/ipmiwatchdog.conf
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root)
+
+%{_prefix}/sbin/ipmiwatchdogd
+
+%config(noreplace) %{_sysconfdir}/ipmiwatchdog.conf
+%config(noreplace) %{_sysconfdir}/init.d/S99zIPMIWATCHDOGD
+
+%changelog
+* Mon Mar 18 2013 Sam Lee <Sam.Lee@emerson.com>
+- This is the initail release version 1.0
